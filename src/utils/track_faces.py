@@ -2,12 +2,13 @@ import os
 import argparse
 import cPickle as pickle
 import openface
+import cv2
 
 
 from src.xml_parser import read_crowd_gaze_xml, write_crowd_gaze_xml
 from src.features_calculator import calculate_features
 from src.face_aligner import calculate_aligned_face_from_mat
-from src.face_clipper import clip_face
+from src.face_clipper import clip_matrix
 
 
 def main(args):
@@ -28,16 +29,18 @@ def main(args):
         if args.verbose:
             print('Processing image {}'.format(image['path']))
 
+        image_path = os.path.join(image_dir, image.attrib['file'])
+        print(image_path)
+        img = cv2.imread(image_path)
+
         for box in image.iter('box'):
 
-            face = clip_face(image_path_absolute=os.path.join(image_dir, image.attrib['file']),
-                             width=int(box.attrib['width']),
-                             height=int(box.attrib['height']),
-                             top=int(box.attrib['top']),
-                             left=int(box.attrib['left']),
-                             expand_by=10)
-
-            print(face)
+            face = clip_matrix(img,
+                               width=int(box.attrib['width']),
+                               height=int(box.attrib['height']),
+                               top=int(box.attrib['top']),
+                               left=int(box.attrib['left']),
+                               expand_by=10)
 
             aligned_face = calculate_aligned_face_from_mat(face, face_aligner)
 
