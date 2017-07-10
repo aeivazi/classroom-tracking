@@ -8,7 +8,7 @@ from src.face_aligner import calculate_aligned_face
 
 
 def main(args):
-    clf = pickle.load(open(args.model, 'rb'))
+    face_classification_model = pickle.load(open(args.model_dir, 'rb'))
 
     aligner = openface.AlignDlib(args.dlibFacePredictor)
     aligned_face = \
@@ -17,16 +17,15 @@ def main(args):
     features_model = openface.TorchNeuralNet(args.networkModel, args.img_dim)
 
     image_as_features = calculate_features(aligned_face, features_model)
-    prediction = clf.predict(image_as_features)
+    prediction = face_classification_model.predict(image_as_features)
 
     print(prediction)
-
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('image_to_predict', type=str, help='Path to image to predict')
-    parser.add_argument('model', type=str, help='Path to classification model pickle')
+    parser.add_argument('model_dir', type=str, help='Path to model directory')
     parser.add_argument('--networkModel', type=str, help='Path to Torch network model.',
                         default=os.path.join('/home/anna/src/openface/models/openface', 'nn4.small2.v1.t7'))
     parser.add_argument('--dlibFacePredictor', type=str, help='Path to dlibs face predictor.',

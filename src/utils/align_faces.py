@@ -6,7 +6,6 @@
 # 2017/06/28
 #
 
-import time
 import argparse
 import cv2
 import os
@@ -16,18 +15,7 @@ from src.image_reader import get_image_list
 from src.face_aligner import calculate_aligned_face
 
 
-def main():
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('img_dir', type=str, help='Input images directory.')
-    parser.add_argument('out_dir', type=str, help='Output directory for aligned faces.')
-    parser.add_argument('--dlibFacePredictor', type=str, help='Path to dlibs face predictor.',
-                        default=os.path.join('/home/anna/src/openface/models/dlib/shape_predictor_68_face_landmarks.dat'))
-    parser.add_argument('--img-dim', type=int, help='Default image dimension.', default=96)
-    parser.add_argument('--verbose', action='store_true')
-
-    args = parser.parse_args()
+def main(args):
 
     aligner = openface.AlignDlib(args.dlibFacePredictor)
 
@@ -40,7 +28,11 @@ def main():
 
     for img_path in images:
 
-        aligned_face = calculate_aligned_face(img_path, aligner, args.img_dim, args.verbose)
+        try:
+            aligned_face = calculate_aligned_face(img_path, aligner, args.img_dim, args.verbose)
+        except ValueError as err:
+            print(err.message)
+            continue
 
         if aligned_face is not None:
 
@@ -56,4 +48,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('img_dir', type=str, help='Input images directory.')
+    parser.add_argument('out_dir', type=str, help='Output directory for aligned faces.')
+    parser.add_argument('--dlibFacePredictor', type=str, help='Path to dlibs face predictor.',
+                        default=os.path.join(
+                            '/home/anna/src/openface/models/dlib/shape_predictor_68_face_landmarks.dat'))
+    parser.add_argument('--img-dim', type=int, help='Default image dimension.', default=96)
+    parser.add_argument('--verbose', action='store_true')
+
+    args = parser.parse_args()
+    main(args)

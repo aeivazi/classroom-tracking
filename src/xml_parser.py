@@ -1,14 +1,15 @@
 import xml.etree.ElementTree as ET
 
 
-"""Reads xml and return list of images.
+def read_crowd_gaze_xml2(xml_file_path):
+    """
+    Reads xml and return list of images.
 
-   Structure of the image is:
-   image: {'path': str, 'participants': list}
-   participant: {'label': str, 'face_box': dict}
-   face_box: {'height': int, 'width': int, 'left': int, 'top': int}
-"""
-def read_crowd_gaze_xml(xml_file_path):
+    Structure of the image is:
+    image: {'path': str, 'participants': list}
+    participant: {'label': str, 'face_box': dict}
+    face_box: {'height': int, 'width': int, 'left': int, 'top': int}
+    """
 
     dataset = ET.parse(xml_file_path).getroot()
 
@@ -28,3 +29,18 @@ def read_crowd_gaze_xml(xml_file_path):
         images.append({'path': image.attrib['file'], 'participants': participants})
 
     return images
+
+
+def read_crowd_gaze_xml(xml_file_path):
+    """
+    Reads xml and return the whole tree
+    """
+
+    return ET.parse(xml_file_path).getroot()
+
+
+def write_crowd_gaze_xml(tree, xml_file_path):
+    """
+    Writes tree to xml file
+    """
+    tree.write(xml_file_path)

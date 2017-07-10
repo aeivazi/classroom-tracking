@@ -17,9 +17,9 @@ def image_to_features(img_path, model, verbose=False):
     return calculate_features(rgbImg, model)
 
 
-def calculate_features(cv2_image, model):
+def calculate_features(face_matrix, model):
     """
-    Calculates 128 features for an given image as a cv2 matrix.
+    Calculates 128 features for an given face matrix.
     """
-    rep = model.forward(cv2_image)
+    rep = model.forward(face_matrix)
     return rep
