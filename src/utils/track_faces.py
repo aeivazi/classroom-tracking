@@ -3,25 +3,13 @@ import argparse
 import cPickle as pickle
 import openface
 import cv2
-import pandas as pd
 
 
 from src.xml_parser import read_crowd_gaze_xml, write_crowd_gaze_xml
 from src.features_calculator import calculate_features
 from src.face_aligner import calculate_aligned_face_from_mat
 from src.face_clipper import clip_matrix
-from src.face_classification_predictor import predict_face
-
-
-def get_labels_dict(labels_path):
-
-    labels_df = pd.read_csv(labels_path)
-
-    print(labels_df)
-
-    labels_dict = labels_df.to_dict()
-    print(labels_dict)
-    return labels_dict
+from src.face_classification_predictor import predict_face, get_labels_dict
 
 
 def main(args):
@@ -57,8 +45,8 @@ def main(args):
                                expand_by=10)
             try:
                 aligned_face = calculate_aligned_face_from_mat(face, face_aligner)
-            except ValueError as error:
-                print(error.message)
+            except ValueError:
+                print('Could not align face, cannot continue with prediction. Label with be set to Unknown')
                 box.find('label').text='Unknown'
                 continue
 
@@ -66,7 +54,7 @@ def main(args):
 
             prediction = predict_face(face_features, face_classification_model, labels_dict)
 
-            box.find('label').text = str(prediction[0])
+            box.find('label').text = str(prediction)
 
     write_crowd_gaze_xml(xml_tree, args.output_xml)
 

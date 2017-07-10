@@ -5,10 +5,11 @@ import openface
 
 from src.features_calculator import calculate_features
 from src.face_aligner import calculate_aligned_face
+from src.face_classification_predictor import get_labels_dict, predict_face
 
 
 def main(args):
-    face_classification_model = pickle.load(open(args.model_dir, 'rb'))
+    face_classification_model = pickle.load(open(os.path.join(args.model_dir, 'model.pkl'), 'rb'))
 
     aligner = openface.AlignDlib(args.dlibFacePredictor)
     aligned_face = \
@@ -16,8 +17,11 @@ def main(args):
 
     features_model = openface.TorchNeuralNet(args.networkModel, args.img_dim)
 
-    image_as_features = calculate_features(aligned_face, features_model)
-    prediction = face_classification_model.predict(image_as_features)
+    labels_dict = get_labels_dict(os.path.join(args.model_dir, 'labels.csv'))
+
+    face_features = calculate_features(aligned_face, features_model)
+
+    prediction = predict_face(face_features, face_classification_model, labels_dict)
 
     print(prediction)
 
