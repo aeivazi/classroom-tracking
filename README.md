@@ -66,5 +66,11 @@ PYTHONPATH='.' python2 ./src/utils/create_model_face_prediction.py /home/anna/da
 ### Compare faces
 
 ```
-PYTHONPATH='.' python2 ./src/utils/predict.py /home/anna/data/birthday/faces/image-input-000013/participant1.jpg /home/anna/data/birthday/model/model.pkl
+PYTHONPATH='.' python2 ./src/utils/predict_face.py /home/anna/data/birthday/faces/image-input-000013/participant1.jpg /home/anna/data/birthday/model
+```
+
+## Track faces within xml
+
+```
+PYTHONPATH='.' python2 ./src/utils/track_faces.py /home/anna/data/birthday/input/faces.xml /home/anna/data/birthday/input/faces-out.xml /home/anna/data/birthday/model
 ```
