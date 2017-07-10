@@ -30,25 +30,29 @@ def main(args):
             print('Processing image {}'.format(image['path']))
 
         image_path = os.path.join(image_dir, image.attrib['file'])
-        print(image_path)
-        img = cv2.imread(image_path)
+        bgr_img = cv2.imread(image_path)
+        rgb_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
 
         for box in image.iter('box'):
 
-            face = clip_matrix(img,
+            face = clip_matrix(rgb_img,
                                width=int(box.attrib['width']),
                                height=int(box.attrib['height']),
                                top=int(box.attrib['top']),
                                left=int(box.attrib['left']),
                                expand_by=10)
-
-            aligned_face = calculate_aligned_face_from_mat(face, face_aligner)
+            try:
+                aligned_face = calculate_aligned_face_from_mat(face, face_aligner)
+            except ValueError as error:
+                print(error.message)
+                box.find('label').text='Unknown'
+                continue
 
             image_as_features = calculate_features(aligned_face, features_model)
 
             prediction = face_classification_model.predict(image_as_features)
 
-            box.find('label').text = prediction
+            box.find('label').text = str(prediction[0])
 
     write_crowd_gaze_xml(xml_tree, args.output_xml)
 
