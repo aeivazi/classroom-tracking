@@ -26,7 +26,6 @@ def main(args):
     image_dir = os.path.dirname(args.input_xml)
     for ind, image in enumerate(images):
 
-
         # skip frames if user defined it so
         if args.frames_start and ind <= args.frames_start:
             continue

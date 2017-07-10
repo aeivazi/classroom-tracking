@@ -36,7 +36,7 @@ def read_crowd_gaze_xml(xml_file_path):
     Reads xml and return the whole tree
     """
 
-    return ET.parse(xml_file_path).getroot()
+    return ET.parse(xml_file_path)
 
 
 def write_crowd_gaze_xml(tree, xml_file_path):
