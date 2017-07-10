@@ -7,7 +7,6 @@
 # 2017/06/21
 #
 
-import time
 import argparse
 import os
 import pandas as pd
@@ -29,15 +28,6 @@ def do_talking(message):
 def parent_folder(path):
     return os.path.basename(os.path.dirname(path))
 
-def read_data(model_dir):
-    features_path = os.path.join(model_dir, 'features.csv')
-    features_df = pd.read_csv(features_path)
-
-    labels_path = os.path.join(model_dir, 'labels.csv')
-    labels_df = pd.read_csv(labels_path)
-
-    return features_df, labels_df
-
 
 def create_classifier(features, labels):
 
@@ -46,21 +36,34 @@ def create_classifier(features, labels):
     return clf
 
 
-def write_features(output_dir):
-    features_df, labels_df = read_data(output_dir)
+def calculate_features(images, model, output_path, verbose=False):
+
+    feature_values = [image_to_features(img, model, verbose) for img in images]
+
+    features_df = pd.DataFrame(feature_values)
+    features_df.to_csv(output_path, index=False, header=False)
+
+    return features_df
+
+
+def calculate_labels(images, output_path):
+
+    participants_set = {parent_folder(image) for image in images}
+    participant_as_index = {p: ind for ind, p in enumerate(participants_set)}
+
+    images_with_ind = [[participant_as_index[parent_folder(image)], parent_folder(image)] for image in images]
+
+    labels_df = pd.DataFrame(images_with_ind, columns=['numeric', 'text'])
+    labels_df.to_csv(output_path)
+
+    return labels_df
+
+
+def calculate_svm_model(features_df, labels_df, output_dir):
     features = features_df.as_matrix()
 
-    labels_df1 = labels_df.ix[:,0]
-    labels = labels_df1.as_matrix()
-
-    clf = create_classifier(features, labels)
-
-    model_path = os.path.join(output_dir, 'model.pkl')
-    with open(model_path, 'wb') as model_file:
-        pickle.dump(clf, model_file)
-
-
-def calculate_svm_model(features, labels, output_dir):
+    labels_only_df = labels_df.ix[:, 'numeric']
+    labels = labels_only_df.as_matrix()
 
     clf = create_classifier(features, labels)
 
@@ -84,24 +87,13 @@ def main(args):
     images = get_image_list(args.img_dir)
     do_talking('Found {} images to process'.format(len(images)))
 
-    feature_values = [image_to_features(img, model, args.verbose) for img in images]
-    features_df = pd.DataFrame(feature_values)
-    features_df.to_csv(os.path.join(args.out_dir, 'features.csv'), index=False, header=False)
+    features_path = os.path.join(args.out_dir, 'features.csv')
+    features_df = calculate_features(images, model, features_path, args.verbose)
 
-    participants_set ={parent_folder(image) for image in images}
-    participant_as_index = {p : ind for ind, p in enumerate(participants_set)}
+    labels_path = os.path.join(args.out_dir, 'labels.csv')
+    labels_df = calculate_labels(images, labels_path)
 
-    images_with_ind = [[participant_as_index[parent_folder(image)],image] for image in images]
-
-    labels_df = pd.DataFrame(images_with_ind)
-    labels_df.to_csv(os.path.join(args.out_dir, 'labels.csv'), index=False, header=False)
-
-    features = features_df.as_matrix()
-
-    labels_only_df = labels_df.ix[:, 0]
-    labels = labels_only_df.as_matrix()
-
-    calculate_svm_model(features, labels, args.out_dir)
+    calculate_svm_model(features_df, labels_df, args.out_dir)
 
 
 if __name__ == "__main__":

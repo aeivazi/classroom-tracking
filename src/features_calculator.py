@@ -22,4 +22,4 @@ def calculate_features(face_matrix, model):
     Calculates 128 features for an given face matrix.
     """
     rep = model.forward(face_matrix)
-    return rep.reshape(1, -1)
+    return rep

@@ -3,12 +3,25 @@ import argparse
 import cPickle as pickle
 import openface
 import cv2
+import pandas as pd
 
 
 from src.xml_parser import read_crowd_gaze_xml, write_crowd_gaze_xml
 from src.features_calculator import calculate_features
 from src.face_aligner import calculate_aligned_face_from_mat
 from src.face_clipper import clip_matrix
+from src.face_classification_predictor import predict_face
+
+
+def get_labels_dict(labels_path):
+
+    labels_df = pd.read_csv(labels_path)
+
+    print(labels_df)
+
+    labels_dict = labels_df.to_dict()
+    print(labels_dict)
+    return labels_dict
 
 
 def main(args):
@@ -17,6 +30,7 @@ def main(args):
     face_classification_model = pickle.load(open(os.path.join(args.model_dir, 'model.pkl'), 'rb'))
     face_aligner = openface.AlignDlib(args.dlibFacePredictor)
     features_model = openface.TorchNeuralNet(args.networkModel, args.img_dim)
+    labels_dict = get_labels_dict(os.path.join(args.model_dir, 'labels.csv'))
 
     image_dir = os.path.dirname(args.input_xml)
 
@@ -48,9 +62,9 @@ def main(args):
                 box.find('label').text='Unknown'
                 continue
 
-            image_as_features = calculate_features(aligned_face, features_model)
+            face_features = calculate_features(aligned_face, features_model)
 
-            prediction = face_classification_model.predict(image_as_features)
+            prediction = predict_face(face_features, face_classification_model, labels_dict)
 
             box.find('label').text = str(prediction[0])
 
