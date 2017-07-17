@@ -1,62 +1,106 @@
-#!/usr/bin/env python2
-#
-# Aligns the biggest face on the image by using openface utilities.
-#
-# Anna Eivazi
-# 2017/06/28
-#
-
+import os
 import argparse
 import cv2
-import os
-import openface
+import copy
 
-from src.image_reader import get_image_list
-from src.face_aligner import calculate_aligned_face
+from src.xml_parser import read_crowd_gaze_xml
+from src.face_clipper import clip_matrix
+from src.face_aligner import align
+
+
+def save_image(im, dir_path, image_name):
+    image_path = os.path.join(dir_path, image_name)
+    image_matrix_bgr = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(image_path, image_matrix_bgr)
 
 
 def main(args):
+    xml_tree = read_crowd_gaze_xml(args.input_xml)
 
-    aligner = openface.AlignDlib(args.dlibFacePredictor)
+    output_dir = os.path.dirname(args.output_faces_dir)
 
-    if not (os.path.exists(args.img_dir)):
-        raise ValueError('Input directory does not exist: {}'.format(args.img_dir))
+    image_dir = os.path.dirname(args.input_xml)
+    for ind, image in enumerate(xml_tree.getroot().iter('image')):
 
-    images = get_image_list(args.img_dir)
-    if args.verbose:
-        print('Found {} images to process'.format(len(images)))
-
-    for img_path in images:
-
-        try:
-            aligned_face = calculate_aligned_face(img_path, aligner, args.img_dim, args.verbose)
-        except ValueError as err:
-            print(err.message)
+        # skip frames if user defined it so
+        if args.frames_start and ind <= args.frames_start:
             continue
 
-        if aligned_face is not None:
+        # stop processing if user defined it so
+        if args.frames_end and ind > args.frames_end:
+            break
 
-            aligned_path = os.path.join(args.out_dir, os.path.basename(os.path.dirname(img_path)), os.path.basename(img_path))
-            if args.verbose:
-                print('Writing aligned image to {}'.format(aligned_path))
+        if args.verbose:
+            print('Processing image {}'.format(image.attrib['file']))
 
-            this_dir = os.path.dirname(aligned_path)
-            if not os.path.exists(this_dir):
-                os.makedirs(this_dir)
+        # read image as rgb
+        image_path = os.path.join(image_dir, image.attrib['file'])
+        image_matrix_bgr = cv2.imread(image_path)
+        image_matrix_rgb = cv2.cvtColor(image_matrix_bgr, cv2.COLOR_BGR2RGB)
 
-            cv2.imwrite(aligned_path, aligned_face)
+        # make frame directory
+        frame_name = os.path.splitext(os.path.basename(image.attrib['file']))[0]
+        frame_dir = os.path.join(output_dir, frame_name)
+        if not os.path.exists(frame_dir):
+            os.makedirs(frame_dir)
+
+        for box in image.iter('box'):
+
+            # clip a face from the frame image
+            face = clip_matrix(image_matrix_rgb,
+                               width=int(box.attrib['width']),
+                               height=int(box.attrib['height']),
+                               top=int(box.attrib['top']),
+                               left=int(box.attrib['left']),
+                               expand_by=0)
+
+            # run face alignment algorithm:
+            #  1. make eyes line horizontal
+            #  2. scale the face to 96x96
+
+            # read eye landmarks from xml
+            left_eye = None
+            right_eye = None
+            for landmark in box.iter('point'):
+
+                # we are only interested in eye landmarks
+                if landmark.attrib['idx'] != '1' and landmark.attrib['idx'] != '2':
+                    continue
+
+                # integer precision is just good enough -> pixel precision
+                landmark_x = int(float(landmark.attrib['x']))
+                landmark_y = int(float(landmark.attrib['y']))
+
+                # recalculate landmarks coordinates relatively to box upper left corner
+                landmark_x -= int(box.attrib['left'])
+                landmark_y -= int(box.attrib['top'])
+
+                if landmark.attrib['idx'] == '1':
+                    right_eye = (landmark_x, landmark_y)
+
+                if landmark.attrib['idx'] == '2':
+                    left_eye = (landmark_x, landmark_y)
+
+            # run alignment and save the aligned face
+            aligned_face = align(face, left_eye, right_eye, args.desired_scaled_dim)
+            aligned_image_name = '{}.jpg'.format(box.find('label').text)
+            save_image(aligned_face, frame_dir, aligned_image_name)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('img_dir', type=str, help='Input images directory.')
-    parser.add_argument('out_dir', type=str, help='Output directory for aligned faces.')
-    parser.add_argument('--dlibFacePredictor', type=str, help='Path to dlibs face predictor.',
-                        default=os.path.join(
-                            '/home/anna/src/openface/models/dlib/shape_predictor_68_face_landmarks.dat'))
-    parser.add_argument('--img-dim', type=int, help='Default image dimension.', default=96)
+    parser.add_argument('input_xml', help='path to an xml file with faces detected', type=str)
+    parser.add_argument('output_faces_dir', help='path to directory where faces images will be stored', type=str)
+    parser.add_argument('--desired-scaled-dim', help='desired scaled dimention of the output image', type=int, default=96)
+    parser.add_argument('-fs', '--frames-start', help='process starting from this frame', type=int, required=False)
+    parser.add_argument('-fe', '--frames-end', help='process till this frame', type=int, required=False)
     parser.add_argument('--verbose', action='store_true')
-
     args = parser.parse_args()
+
     main(args)
+
+
+
+
+
+

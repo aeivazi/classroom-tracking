@@ -47,7 +47,7 @@ def main(args):
                             height=participant['face_box']['height'],
                             top=participant['face_box']['top'],
                             left=participant['face_box']['left'],
-                            expand_by=10)
+                            expand_by=30)
             save_face(face_image, faces_dir, image['path'], participant['label'])
 
 
