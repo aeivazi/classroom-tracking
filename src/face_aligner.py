@@ -2,19 +2,6 @@ import cv2
 import numpy as np
 
 
-def calculate_aligned_face(img_path, aligner, img_dim=96, verbose=False):
-    if verbose:
-        print('Processing {}.'.format(img_path))
-
-    bgrImg = cv2.imread(img_path)
-    if bgrImg is None:
-        raise ValueError('Unable to load image: {}'.format(img_path))
-
-    rgbImg = cv2.cvtColor(bgrImg, cv2.COLOR_BGR2RGB)
-
-    return calculate_aligned_face_from_mat(rgbImg, aligner, img_dim, verbose)
-
-
 def align(image_as_mat, left_eye_center, right_eye_center, desired_dim, desired_left_eye=(0.35, 0.35)):
     """
     Rotates and scales input image.
