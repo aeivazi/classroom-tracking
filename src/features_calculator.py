@@ -6,7 +6,7 @@ def image_to_features(img_path, model, verbose=False):
     Calculates 128 features for an image using given model.
     """
     if verbose:
-        print('Processing {}.'.format(img_path))
+        print('Processing {}'.format(img_path))
 
     bgrImg = cv2.imread(img_path)
     if bgrImg is None:
