@@ -3,7 +3,7 @@ import argparse
 import cv2
 import copy
 
-from src.xml_parser import read_crowd_gaze_xml
+from src.xml_parser import read_crowd_gaze_xml, read_eyes_coord
 from src.face_clipper import clip_matrix
 from src.face_aligner import align
 
@@ -59,27 +59,7 @@ def main(args):
             #  2. scale the face to 96x96
 
             # read eye landmarks from xml
-            left_eye = None
-            right_eye = None
-            for landmark in box.iter('point'):
-
-                # we are only interested in eye landmarks
-                if landmark.attrib['idx'] != '1' and landmark.attrib['idx'] != '2':
-                    continue
-
-                # integer precision is just good enough -> pixel precision
-                landmark_x = int(float(landmark.attrib['x']))
-                landmark_y = int(float(landmark.attrib['y']))
-
-                # recalculate landmarks coordinates relatively to box upper left corner
-                landmark_x -= int(box.attrib['left'])
-                landmark_y -= int(box.attrib['top'])
-
-                if landmark.attrib['idx'] == '1':
-                    right_eye = (landmark_x, landmark_y)
-
-                if landmark.attrib['idx'] == '2':
-                    left_eye = (landmark_x, landmark_y)
+            left_eye, right_eye = read_eyes_coord(box)
 
             # run alignment and save the aligned face
             aligned_face = align(face, left_eye, right_eye, args.desired_scaled_dim)
