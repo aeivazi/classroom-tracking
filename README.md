@@ -60,8 +60,17 @@ Calculates faces features from images and SVM model for face recognition. Featur
 PYTHONPATH='.' python2 ./src/utils/create_model_face_prediction.py /home/anna/data/birthday/faces-for-svm /home/anna/data/birthday/model --verbose
 ```
 
-## Track faces within xml
+### Track faces within xml
 
 ```
 PYTHONPATH='.' python2 ./src/utils/track_faces.py /home/anna/data/birthday/input/faces.xml /home/anna/data/birthday/input/faces-out.xml /home/anna/data/birthday/model --verbose
+```
+
+
+
+## Useful tools for testing
+
+### Visualize predicted labels on the frames
+```
+PYTHONPATH='.' python2 ./src/utils/visualize_face_tracking.py /home/anna/data/birthday/input/faces-out.xml /home/anna/data/birthday/visualize-tracking --verbose
 ```
