@@ -1,20 +1,41 @@
-# Face detection and tracking toolkit
+# Face detection and tracking
 
-The toolkit is designed to be used for classroom project, thus using expected structure of the input.
-The toolkit heavily uses openface library [openface library](https://cmusatyalab.github.io/openface/) and 
+The repository contains tools for face detection, face alignment and face tracking.
+
+Face detection is written in cpp by employing [MTCNN implementation](https://github.com/happynear/MTCNN_face_detection_alignment/tree/master/code/codes/vs) that has BSD lisence.
+
+The face alignment and face tracking is written in python and heavily uses openface library [openface library](https://cmusatyalab.github.io/openface/) and 
 [dlib](http://dlib.net/) both are Apache License 2.0.
 
 
-## Split input video to images, recognize faces, write results to xml
+## Face recognition
+
+Face recognition task is done by applying Multi-task Cascaded Convolutional Neural Networks (MTCNN). The current version is tested and build on windows, x64, VC 2015. 
+The implementation is heavily built on the this [MTCNN implementation] (https://github.com/happynear/MTCNN_face_detection_alignment/tree/master/code/codes/vs).
+
+To run exe there are number of dependencies required, they can be found in the root of built folder: ./cpp/x64/Release/
+Remember that dependencies are for Windows, x64 and VC2015.
+
+To compile you will also need number of external libraries, as discussed [here](https://github.com/happynear/caffe-windows).
+
+This version was tested on CPU only and caffee.binding.dll is built with no CUDA support. Running it on CUDA should be quite straightforward, but not tested yet.
+
+
+The tool can take in video or folder with split already frames.
+
+The output is an xml that describes face boxes and five landmarks (eyes, nose tip and mouth corners). Xml have to be located in the same folder where all frame images are, as further processing assuming relative path for images. 
+
+
+### Run face recognition on input video
 
 ```
-mtcnn.exe -i "c:\Users\myaccount\Desktop\classroom-project\birthday\input.mp4" -o "c:\Users\myaccount\Desktop\classroom-project\birthday\input\faces.xml" -n test_dataset -c "birthday dataset test"
+mtcnn.exe -i "c:\classroom-project\test\input.mp4" -o "c:\classroom-project\test\input\faces.xml" -n test_dataset -c "dataset test"
 ```
 
-If you want to work with a split before video, you can give as input the path to the folder:
+### Run face recognition on input directory with split frames
 
 ```
-mtcnn.exe -i "c:\anna\crowd_tracking\23100601S1" -o "C:\anna\crowd_tracking\output_xml.xml" -n test_dataset -c "running test dataset"
+mtcnn.exe -i "c:\classroom-project\test\input" -o "c:\classroom-project\test\input\faces.xml" -n test_dataset -c "running test dataset"
 ```
 
 ## Train SVM model for face recoginition
@@ -33,7 +54,7 @@ If the model will be translated in house any other default size can be used. Che
 The faces are saved as a separate images.
 
 ```
-PYTHONPATH='.' python2 ./src/utils/align_faces.py /home/anna/data/birthday/input/faces.xml /home/anna/data/birthday/faces-aligned/ --verbose
+PYTHONPATH='.' python2 ./src/utils/align_faces.py /data/test/input/faces.xml /data/test/faces-aligned/ --verbose
 ```
 
 ### Create training set
@@ -57,13 +78,13 @@ root_folder
 Calculates faces features from images and SVM model for face recognition. Features and labels are saved as cvs files, model is saved as pickle file.
 
 ```
-PYTHONPATH='.' python2 ./src/utils/create_model_face_prediction.py /home/anna/data/birthday/faces-for-svm /home/anna/data/birthday/model --verbose
+PYTHONPATH='.' python2 ./src/utils/create_model_face_prediction.py  /data/test/faces-for-svm /data/test/model --verbose
 ```
 
 ### Track faces within xml
 
 ```
-PYTHONPATH='.' python2 ./src/utils/track_faces.py /home/anna/data/birthday/input/faces.xml /home/anna/data/birthday/input/faces-out.xml /home/anna/data/birthday/model --verbose
+PYTHONPATH='.' python2 ./src/utils/track_faces.py /data/test/input/faces.xml /data/test/input/faces_tracked.xml /data/test/model --verbose
 ```
 
 
@@ -72,5 +93,5 @@ PYTHONPATH='.' python2 ./src/utils/track_faces.py /home/anna/data/birthday/input
 
 ### Visualize predicted labels on the frames
 ```
-PYTHONPATH='.' python2 ./src/utils/visualize_face_tracking.py /home/anna/data/birthday/input/faces-out.xml /home/anna/data/birthday/visualize-tracking --verbose
+PYTHONPATH='.' python2 ./src/utils/visualize_face_tracking.py //data/test/input/faces_tracked.xml /data/test/visualize-tracking --verbose
 ```
