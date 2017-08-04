@@ -5,7 +5,7 @@ import openface
 import cv2
 
 
-from src.xml_parser import read_crowd_gaze_xml, write_crowd_gaze_xml, read_eyes_coord
+from src.xml_parser import read_crowd_gaze_xml, write_crowd_gaze_xml, read_landmark_coords
 from src.features_calculator import calculate_features
 from src.face_aligner import align
 from src.face_clipper import clip_matrix
@@ -55,8 +55,8 @@ def main(args):
                                left=int(box.attrib['left']),
                                expand_by=0)
             try:
-                left_eye, right_eye = read_eyes_coord(box)
-                aligned_face = align(face, left_eye, right_eye, args.img_dim)
+                landmarks = read_landmark_coords(box)
+                aligned_face = align(face, landmarks, args.img_dim)
             except ValueError:
                 print('Could not align face, cannot continue with prediction. Label with be set to Unknown')
                 box.find('label').text='Unknown'
