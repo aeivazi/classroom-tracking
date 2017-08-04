@@ -1,11 +1,10 @@
 import os
 import argparse
 import cv2
-import copy
 
-from src.xml_parser import read_crowd_gaze_xml, read_eyes_coord
+from src.xml_parser import read_crowd_gaze_xml, read_landmark_coords
 from src.face_clipper import clip_matrix
-from src.face_aligner import align
+from src.face_aligner import align, align_eyes_only
 
 
 def save_image(im, dir_path, image_name):
@@ -55,14 +54,14 @@ def main(args):
                                expand_by=0)
 
             # run face alignment algorithm:
-            #  1. make eyes line horizontal
+            #  1. align eyes and center of the mouth to predefined places
             #  2. scale the face to 96x96
 
-            # read eye landmarks from xml
-            left_eye, right_eye = read_eyes_coord(box)
+            # read landmarks from xml
+            landmarks = read_landmark_coords(box)
 
             # run alignment and save the aligned face
-            aligned_face = align(face, left_eye, right_eye, args.desired_scaled_dim)
+            aligned_face = align(face, landmarks, args.desired_scaled_dim)
             aligned_image_name = '{}.jpg'.format(box.find('label').text)
             save_image(aligned_face, frame_dir, aligned_image_name)
 

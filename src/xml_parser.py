@@ -45,3 +45,26 @@ def read_eyes_coord(box):
             left_eye = (landmark_x, landmark_y)
 
     return left_eye, right_eye
+
+
+def read_landmark_coords(box):
+    """
+    Reads landmarks and recalculated coordinates to originate from the box upper left corner.
+
+    :param box: xml box item, that should have a structure as crowd gaze xml dictates
+    :return: ladmark coordinates
+    """
+    landmarks = []
+    for landmark in box.iter('point'):
+
+        # integer precision is just good enough -> pixel precision
+        landmark_x = int(float(landmark.attrib['x']))
+        landmark_y = int(float(landmark.attrib['y']))
+
+        # recalculate landmarks coordinates relatively to box upper left corner
+        landmark_x -= int(box.attrib['left'])
+        landmark_y -= int(box.attrib['top'])
+
+        landmarks.append((landmark_x, landmark_y))
+
+    return landmarks
