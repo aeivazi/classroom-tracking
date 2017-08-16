@@ -53,6 +53,9 @@ def main(args):
                                left=int(box.attrib['left']),
                                expand_by=0)
 
+            if face.shape[0] <= 0 or face.shape[1] <= 0:
+                continue
+
             # run face alignment algorithm:
             #  1. align eyes and center of the mouth to predefined places
             #  2. scale the face to 96x96

@@ -74,8 +74,6 @@ def align(image_as_mat, landmarks, desired_dim):
 
     M = cv2.getAffineTransform(landmarks_src, landmarks_dst)
 
-    print(M)
-
     output = cv2.warpAffine(image_as_mat, M, (desired_dim, desired_dim), flags=cv2.INTER_CUBIC)
 
     return output
